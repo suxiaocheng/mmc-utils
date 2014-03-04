@@ -824,9 +824,10 @@ int do_read_extcsd(int nargs, char **argv)
 				" 0x%02x\n", j, ext_csd[j]);
 		for (j = 269; j >= 268; j--) {
 			__u8 life_used=ext_csd[j];
-			printf("Device life time estimation type B"
+			char est_type = 'B' + (j - 269);
+			printf("Device life time estimation type %c"
 				" [DEVICE_LIFE_TIME_EST_TYP_%c: 0x%02x]\n",
-				'B' + (j - 269), life_used);
+				est_type, est_type, life_used);
 			if (life_used >= 0x1 && life_used <= 0xa)
 				printf(" i.e. %d%% - %d%% device life time"
 					" used\n",
