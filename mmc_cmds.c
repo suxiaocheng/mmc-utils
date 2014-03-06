@@ -30,23 +30,27 @@
 #include "mmc.h"
 #include "mmc_cmds.h"
 
+#define EXT_CSD_SIZE	512
+#define CID_SIZE 16
+
+
 int read_extcsd(int fd, __u8 *ext_csd)
 {
 	int ret = 0;
 	struct mmc_ioc_cmd idata;
 	memset(&idata, 0, sizeof(idata));
-	memset(ext_csd, 0, sizeof(__u8) * 512);
+	memset(ext_csd, 0, sizeof(__u8) * EXT_CSD_SIZE);
 	idata.write_flag = 0;
 	idata.opcode = MMC_SEND_EXT_CSD;
 	idata.arg = 0;
 	idata.flags = MMC_RSP_SPI_R1 | MMC_RSP_R1 | MMC_CMD_ADTC;
-	idata.blksz = 512;
+	idata.blksz = EXT_CSD_SIZE;
 	idata.blocks = 1;
 	mmc_ioc_cmd_set_data(idata, ext_csd);
 
 	ret = ioctl(fd, MMC_IOC_CMD, &idata);
 	if (ret)
-		perror("ioctl");
+		perror("ioctl SEND_EXT_CSD");
 
 	return ret;
 }
@@ -67,7 +71,7 @@ int write_extcsd_value(int fd, __u8 index, __u8 value)
 
 	ret = ioctl(fd, MMC_IOC_CMD, &idata);
 	if (ret)
-		perror("ioctl");
+		perror("ioctl Write EXT CSD");
 
 	return ret;
 }
@@ -127,7 +131,7 @@ void print_writeprotect_status(__u8 *ext_csd)
 
 int do_writeprotect_get(int nargs, char **argv)
 {
-	__u8 ext_csd[512];
+	__u8 ext_csd[EXT_CSD_SIZE];
 	int fd, ret;
 	char *device;
 
@@ -155,7 +159,7 @@ int do_writeprotect_get(int nargs, char **argv)
 
 int do_writeprotect_set(int nargs, char **argv)
 {
-	__u8 ext_csd[512], value;
+	__u8 ext_csd[EXT_CSD_SIZE], value;
 	int fd, ret;
 	char *device;
 
@@ -191,7 +195,7 @@ int do_writeprotect_set(int nargs, char **argv)
 
 int do_disable_512B_emulation(int nargs, char **argv)
 {
-	__u8 ext_csd[512], native_sector_size, data_sector_size, wr_rel_param;
+	__u8 ext_csd[EXT_CSD_SIZE], native_sector_size, data_sector_size, wr_rel_param;
 	int fd, ret;
 	char *device;
 
@@ -301,7 +305,7 @@ int do_write_boot_en(int nargs, char **argv)
 
 int do_hwreset(int value, int nargs, char **argv)
 {
-	__u8 ext_csd[512];
+	__u8 ext_csd[EXT_CSD_SIZE];
 	int fd, ret;
 	char *device;
 
@@ -360,7 +364,7 @@ int do_hwreset_dis(int nargs, char **argv)
 
 int do_write_bkops_en(int nargs, char **argv)
 {
-	__u8 ext_csd[512], value = 0;
+	__u8 ext_csd[EXT_CSD_SIZE], value = 0;
 	int fd, ret;
 	char *device;
 
@@ -502,7 +506,7 @@ int set_partitioning_setting_completed(int dry_run, const char * const device,
 int do_enh_area_set(int nargs, char **argv)
 {
 	__u8 value;
-	__u8 ext_csd[512];
+	__u8 ext_csd[EXT_CSD_SIZE];
 	int fd, ret;
 	char *device;
 	int dry_run = 1;
@@ -640,7 +644,7 @@ int do_enh_area_set(int nargs, char **argv)
 int do_write_reliability_set(int nargs, char **argv)
 {
 	__u8 value;
-	__u8 ext_csd[512];
+	__u8 ext_csd[EXT_CSD_SIZE];
 	int fd, ret;
 
 	int dry_run = 1;
@@ -701,7 +705,7 @@ int do_write_reliability_set(int nargs, char **argv)
 
 int do_read_extcsd(int nargs, char **argv)
 {
-	__u8 ext_csd[512], ext_csd_rev, reg;
+	__u8 ext_csd[EXT_CSD_SIZE], ext_csd_rev, reg;
 	__u32 regl;
 	int fd, ret;
 	char *device;
@@ -1192,6 +1196,44 @@ int do_read_extcsd(int nargs, char **argv)
 	}
 
 out_free:
+	return ret;
+}
+
+int do_dump_extcsd(int nargs, char **argv)
+{
+	__u8 ext_csd[EXT_CSD_SIZE];
+	int fd, ret;
+	char *device;
+	int i, j;
+
+	CHECK(nargs != 2, "Usage: mmc extcsd dump </path/to/mmcblkX>\n",
+			  exit(1));
+
+	device = argv[1];
+
+	fd = open(device, O_RDWR);
+	if (fd < 0) {
+		perror("Failed to open mmc device");
+		exit(1);
+	}
+
+	ret = read_extcsd(fd, ext_csd);
+	if (ret) {
+		fprintf(stderr, "Could not read EXT_CSD from %s\n", device);
+		exit(1);
+	}
+
+	/* Dump all bytes so that any undecoded or proprietary registers */
+	/* can be acessed. */
+	printf("EXT_CSD binary dump:\n");
+	for (i = 0; i < EXT_CSD_SIZE; i+= 16) {
+		printf(" %3d: %3x:  ", i, i);
+		for (j = 0; (j < 16) && (i + j < EXT_CSD_SIZE); j++) {
+			printf(" %02x", ext_csd[i+j]);
+		}
+		printf("\n");
+	}
+
 	return ret;
 }
 
