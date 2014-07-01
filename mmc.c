@@ -115,6 +115,11 @@ static struct Command commands[] = {
 		"Send Sanitize command to the <device>.\nThis will delete the unmapped memory region of the device.",
 	  NULL
 	},
+	{ do_emmc50_ffu, -2,
+	  "ffu", "<image name> <device>\n"
+		"run eMMC 5.0 Field firmware update.\n.",
+	  NULL
+	},
 	{ 0, 0, 0, 0 }
 };
 

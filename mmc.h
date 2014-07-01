@@ -64,6 +64,7 @@
 #define EXT_CSD_ENH_START_ADDR_2	138
 #define EXT_CSD_ENH_START_ADDR_1	137
 #define EXT_CSD_ENH_START_ADDR_0	136
+#define EXT_CSD_REV			192
 #define EXT_CSD_NATIVE_SECTOR_SIZE	63 /* R */
 #define EXT_CSD_USE_NATIVE_SECTOR	62 /* R/W */
 #define EXT_CSD_DATA_SECTOR_SIZE	61 /* R */
@@ -78,6 +79,9 @@
  * BKOPS_EN field definition
  */
 #define BKOPS_ENABLE	(1<<0)
+
+#define MMC_FFU_DOWNLOAD_OP	302
+#define MMC_FFU_INSTALL_OP	303
 
 /*
  * EXT_CSD field definitions
