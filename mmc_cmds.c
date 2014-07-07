@@ -1157,11 +1157,27 @@ int do_read_extcsd(int nargs, char **argv)
 				" [VENDOR_SPECIFIC_FIELD[%d]]: 0x%02x\n",
 				j, ext_csd[j]);
 
+		reg = ext_csd[63];
 		printf("Native sector size [NATIVE_SECTOR_SIZE]: 0x%02x\n",
-			ext_csd[63]);
+			reg);
+		if (reg == 0x00)
+			printf(" i.e. 512 B\n");
+		else if (reg == 0x01)
+			printf(" i.e. 4 KiB\n");
+		else
+			printf(" i.e. Reserved\n");
+
 		printf("Sector size emulation [USE_NATIVE_SECTOR]: 0x%02x\n",
 			ext_csd[62]);
-		printf("Sector size [DATA_SECTOR_SIZE]: 0x%02x\n", ext_csd[61]);
+		reg = ext_csd[61];
+		printf("Sector size [DATA_SECTOR_SIZE]: 0x%02x\n", reg);
+		if (reg == 0x00)
+			printf(" i.e. 512 B\n");
+		else if (reg == 0x01)
+			printf(" i.e. 4 KiB\n");
+		else
+			printf(" i.e. Reserved\n");
+
 		printf("1st initialization after disabling sector"
 			" size emulation [INI_TIMEOUT_EMU]: 0x%02x\n",
 			ext_csd[60]);
@@ -1193,6 +1209,41 @@ int do_read_extcsd(int nargs, char **argv)
 			" [CACHE_CTRL]: 0x%02x\n", ext_csd[33]);
 		/* flush_cache ext_csd[32] not readable */
 		/*Reserved [31:0] */
+	}
+	if (ext_csd_rev >= 7) {
+		printf("Mode config [MODE_CONFIG: 0x%02x]\n", ext_csd[30]);
+		printf("Mode operation codes [MODE_OPERATION_CODES: 0x%02x]\n",
+		       ext_csd[29]);
+
+		reg = ext_csd[26];
+		printf("FFU status [FFU_STATUS: 0x%02x]\n", reg);
+		switch (reg) {
+		case 0x00:
+			printf(" Success\n");
+			break;
+		case 0x10:
+			printf(" General error\n");
+			break;
+		case 0x11:
+			printf(" Firmware install error\n");
+			break;
+		case 0x12:
+			printf(" Error in downloading firmware\n");
+			break;
+		default:
+			printf(" Reserved\n");
+		}
+		printf("Pre loading data size [PRE_LOADING_DATA_SIZE] is"
+			" %d sector size\n",
+		       get_word_from_ext_csd(&ext_csd[22]));
+		printf("Max pre loading data size [MAX_PRE_LOADING_DATA_SIZE] is"
+			" %d sector size\n",
+		       get_word_from_ext_csd(&ext_csd[18]));
+		printf("Product state awareness enablement"
+			" [PRODUCT_STATE_AWARENESS_ENABLEMENT: 0x%02x]\n",
+		       ext_csd[17]);
+		printf("Secure Removal Type [SECURE_REMOVAL_TYPE: 0x%02x]\n",
+		       ext_csd[16]);
 	}
 
 out_free:
