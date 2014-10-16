@@ -80,8 +80,7 @@
  */
 #define BKOPS_ENABLE	(1<<0)
 
-#define MMC_FFU_DOWNLOAD_OP	302
-#define MMC_FFU_INSTALL_OP	303
+#define MMC_FFU_INVOKE_OP	302
 
 /*
  * EXT_CSD field definitions

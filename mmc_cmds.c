@@ -1318,40 +1318,12 @@ int do_sanitize(int nargs, char **argv)
 
 }
 
-static int ffu_download_image(char *fname, int mmc_fd)
-{
-	struct mmc_ioc_cmd mmc_ioc_cmd;
-
-	/* prepare and send ioctl */
-	memset(&mmc_ioc_cmd, 0, sizeof(mmc_ioc_cmd));
-	mmc_ioc_cmd.opcode = MMC_FFU_DOWNLOAD_OP;
-	mmc_ioc_cmd.blksz = MIN(strlen(fname), FFU_PATH_SIZE);
-	mmc_ioc_cmd.blocks = 1;
-	mmc_ioc_cmd.arg = 0;
-	mmc_ioc_cmd.flags = MMC_RSP_SPI_R1 | MMC_RSP_R1 | MMC_CMD_ADTC;
-	mmc_ioc_cmd.write_flag = 1;
-	mmc_ioc_cmd_set_data(mmc_ioc_cmd, fname);
-	return ioctl(mmc_fd, MMC_IOC_CMD, &mmc_ioc_cmd);
-}
-
-static int ffu_install(int mmc_fd)
-{
-	struct mmc_ioc_cmd mmc_ioc_cmd;
-
-	memset(&mmc_ioc_cmd, 0, sizeof(mmc_ioc_cmd));
-	mmc_ioc_cmd.opcode = MMC_FFU_INSTALL_OP;
-	mmc_ioc_cmd.blocks = 0;
-	mmc_ioc_cmd.arg = 0;
-	mmc_ioc_cmd.flags = MMC_RSP_SPI_R1 | MMC_RSP_R1 | MMC_CMD_ADTC;
-	mmc_ioc_cmd.write_flag = 0;
-	return ioctl(mmc_fd, MMC_IOC_CMD, &mmc_ioc_cmd);
-}
-
 int do_emmc50_ffu (int nargs, char **argv)
 {
 	int fd, ret;
 	char *device;
 	char *path;
+	struct mmc_ioc_cmd mmc_ioc_cmd;
 
 	CHECK(nargs != 3, "Usage: ffu <image name> </path/to/mmcblkX> \n",
 		exit(1));
@@ -1368,13 +1340,16 @@ int do_emmc50_ffu (int nargs, char **argv)
 		exit(1);
 	}
 
-	ret = ffu_download_image(path, fd);
-	if (ret) {
-		fprintf(stderr, "FFU download failed : %s\n", strerror(errno));
-		exit(1);
-	}
-
-	ret = ffu_install(fd);
+	/* prepare and send ioctl */
+	memset(&mmc_ioc_cmd, 0, sizeof(mmc_ioc_cmd));
+	mmc_ioc_cmd.opcode = MMC_FFU_INVOKE_OP;
+	mmc_ioc_cmd.blksz = MIN(strlen(path), FFU_PATH_SIZE);
+	mmc_ioc_cmd.blocks = 1;
+	mmc_ioc_cmd.arg = 0;
+	mmc_ioc_cmd.flags = MMC_RSP_SPI_R1 | MMC_RSP_R1 | MMC_CMD_ADTC;
+	mmc_ioc_cmd.write_flag = 1;
+	mmc_ioc_cmd_set_data(mmc_ioc_cmd, path);
+	ret = ioctl(fd, MMC_IOC_CMD, &mmc_ioc_cmd);
 	if (ret) {
 		fprintf(stderr, "FFU install failed : %s\n", strerror(errno));
 		exit(1);
