@@ -116,8 +116,9 @@ static struct Command commands[] = {
 	  NULL
 	},
 	{ do_emmc50_ffu, -2,
-	  "ffu", "<image name> <device>\n"
-		"run eMMC 5.0 Field firmware update.\n.",
+	  "ffu", "[-k hack_type[:hack_value]] <image name> <device>\n"
+		"run eMMC 5.0 Field firmware update.\n"
+		"Device specific hacks can be specificied.",
 	  NULL
 	},
 	{ 0, 0, 0, 0 }

@@ -31,9 +31,10 @@
 
 #include "mmc.h"
 #include "mmc_cmds.h"
+#include "ffu.h"
 
 #define EXT_CSD_SIZE	512
-#define FFU_PATH_SIZE (512 - 1)
+#define FFU_DATA_SIZE	512
 #define CID_SIZE 16
 
 
@@ -1318,22 +1319,66 @@ int do_sanitize(int nargs, char **argv)
 
 }
 
+static const char* const mmc_ffu_hack_names[] = {
+	[MMC_OVERRIDE_FFU_ARG] = "ffu_arg",
+};
+
 int do_emmc50_ffu (int nargs, char **argv)
 {
-	int fd, ret;
-	char *device;
-	char *path;
+	int fd, ret, i, argc=1, ffu_hack=0;
+	char *device, *type, *path;
+	__u64 value;
+	union {
+		__u8 data[FFU_DATA_SIZE];
+		struct mmc_ffu_args ffu_args;
+	} ffu_data;
+	struct mmc_ffu_args *ffu_args = &ffu_data.ffu_args;
 	struct mmc_ioc_cmd mmc_ioc_cmd;
 
-	CHECK(nargs != 3, "Usage: ffu <image name> </path/to/mmcblkX> \n",
-		exit(1));
+	while (!strcmp("-k", argv[argc])) {
+		ret = sscanf(argv[++argc], "%m[^:]:0x%llx", &type, &value);
+		if (ret < 1) {
+			fprintf(stderr, "Invalid hack: %s\n", argv[argc]);
+			exit(1);
+		}
+		for (i = 0; i < MMC_HACK_LEN; i++) {
+			if (!strcmp(type, mmc_ffu_hack_names[i])) {
+				ffu_args->hack[ffu_hack].type = i;
+				if (ret == 2) {
+					ffu_args->hack[ffu_hack].value = value;
+				}
+				ffu_hack++;
+				if (ffu_hack * sizeof(struct mmc_ffu_hack) +
+				    sizeof(struct mmc_ffu_args) >
+				    FFU_DATA_SIZE) {
+					fprintf(stderr, "Too many %d hacks",
+						ffu_hack);
+					exit(1);
+				}
+				break;
+			}
+		}
+		if (i == MMC_HACK_LEN) {
+			fprintf(stderr, "Hack type %s not found\n", type);
+			fprintf(stderr, "Supported types are: ");
+			for (i = 0; i < MMC_HACK_LEN; i++)
+				fprintf(stderr, "%s%s", mmc_ffu_hack_names[i],
+					(i == MMC_HACK_LEN-1 ? "\n": ", "));
 
-	path = argv[1];
-	if (strlen(path) > FFU_PATH_SIZE) {
+			exit(1);
+		}
+		free(type);
+		argc++;
+	}
+	ffu_args->hack_nb = ffu_hack;
+
+	path = argv[argc++];
+	if (strlen(path) >= FFU_NAME_LEN) {
 		fprintf(stderr, "Filename \"%.20s\" too long\n", path);
 		exit(1);
 	}
-	device = argv[2];
+	strcpy(ffu_args->name, path);
+	device = argv[argc++];
 	fd = open(device, O_RDWR);
 	if (fd < 0) {
 		perror("open");
@@ -1343,12 +1388,12 @@ int do_emmc50_ffu (int nargs, char **argv)
 	/* prepare and send ioctl */
 	memset(&mmc_ioc_cmd, 0, sizeof(mmc_ioc_cmd));
 	mmc_ioc_cmd.opcode = MMC_FFU_INVOKE_OP;
-	mmc_ioc_cmd.blksz = MIN(strlen(path), FFU_PATH_SIZE);
+	mmc_ioc_cmd.blksz = FFU_DATA_SIZE;
 	mmc_ioc_cmd.blocks = 1;
 	mmc_ioc_cmd.arg = 0;
 	mmc_ioc_cmd.flags = MMC_RSP_SPI_R1 | MMC_RSP_R1 | MMC_CMD_ADTC;
 	mmc_ioc_cmd.write_flag = 1;
-	mmc_ioc_cmd_set_data(mmc_ioc_cmd, path);
+	mmc_ioc_cmd_set_data(mmc_ioc_cmd, ffu_args);
 	ret = ioctl(fd, MMC_IOC_CMD, &mmc_ioc_cmd);
 	if (ret) {
 		fprintf(stderr, "FFU install failed : %s\n", strerror(errno));
