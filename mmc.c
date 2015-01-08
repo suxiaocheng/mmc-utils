@@ -36,10 +36,10 @@ struct Command {
 				   if >= 0, number of arguments,
 				   if < 0, _minimum_ number of arguments */
 	char	*verb;		/* verb */
-	char	*help;		/* help lines; from the 2nd line onward they 
-                                   are automatically indented */
-        char    *adv_help;      /* advanced help message; from the 2nd line 
-                                   onward they are automatically indented */
+	char	*help;		/* help lines; from the 2nd line onward they
+				   are automatically indented */
+	char    *adv_help;      /* advanced help message; from the 2nd line
+				   onward they are automatically indented */
 
 	/* the following fields are run-time filled by the program */
 	char	**cmds;		/* array of subcommands */
@@ -127,7 +127,7 @@ static char *get_prgname(char *programname)
 {
 	char	*np;
 	np = strrchr(programname,'/');
-	if(!np)
+	if (!np)
 		np = programname;
 	else
 		np++;
@@ -139,18 +139,18 @@ static void print_help(char *programname, struct Command *cmd, int helptype)
 {
 	char	*pc;
 
-	printf("\t%s %s ", programname, cmd->verb );
+	printf("\t%s %s ", programname, cmd->verb);
 
 	if (helptype == ADVANCED_HELP && cmd->adv_help)
-		for(pc = cmd->adv_help; *pc; pc++){
+		for (pc = cmd->adv_help; *pc; pc++) {
 			putchar(*pc);
-			if(*pc == '\n')
+			if (*pc == '\n')
 				printf("\t\t");
 		}
 	else
-		for(pc = cmd->help; *pc; pc++){
+		for (pc = cmd->help; *pc; pc++) {
 			putchar(*pc);
-			if(*pc == '\n')
+			if (*pc == '\n')
 				printf("\t\t");
 		}
 
@@ -162,7 +162,7 @@ static void help(char *np)
 	struct Command *cp;
 
 	printf("Usage:\n");
-	for( cp = commands; cp->verb; cp++ )
+	for (cp = commands; cp->verb; cp++)
 		print_help(np, cp, BASIC_HELP);
 
 	printf("\n\t%s help|--help|-h\n\t\tShow the help.\n",np);
@@ -175,17 +175,17 @@ static int split_command(char *cmd, char ***commands)
 	int	c, l;
 	char	*p, *s;
 
-	for( *commands = 0, l = c = 0, p = s = cmd ; ; p++, l++ ){
-		if ( *p && *p != ' ' )
+	for (*commands = 0, l = c = 0, p = s = cmd ; ; p++, l++) {
+		if (*p && *p != ' ')
 			continue;
 
 		/* c + 2 so that we have room for the null */
-		(*commands) = realloc( (*commands), sizeof(char *)*(c + 2));
+		(*commands) = realloc((*commands), sizeof(char *)*(c + 2));
 		(*commands)[c] = strndup(s, l);
 		c++;
 		l = 0;
 		s = p+1;
-		if( !*p ) break;
+		if (!*p) break;
 	}
 
 	(*commands)[c] = 0;
@@ -195,38 +195,38 @@ static int split_command(char *cmd, char ***commands)
 /*
 	This function checks if the passed command is ambiguous
 */
-static int check_ambiguity(struct Command *cmd, char **argv){
+static int check_ambiguity(struct Command *cmd, char **argv) {
 	int		i;
 	struct Command	*cp;
 	/* check for ambiguity */
-	for( i = 0 ; i < cmd->ncmds ; i++ ){
+	for (i = 0 ; i < cmd->ncmds ; i++) {
 		int match;
-		for( match = 0, cp = commands; cp->verb; cp++ ){
+		for (match = 0, cp = commands; cp->verb; cp++) {
 			int	j, skip;
 			char	*s1, *s2;
 
-			if( cp->ncmds < i )
+			if (cp->ncmds < i)
 				continue;
 
-			for( skip = 0, j = 0 ; j < i ; j++ )
-				if( strcmp(cmd->cmds[j], cp->cmds[j])){
+			for (skip = 0, j = 0 ; j < i ; j++)
+				if (strcmp(cmd->cmds[j], cp->cmds[j])) {
 					skip=1;
 					break;
 				}
-			if(skip)
+			if (skip)
 				continue;
 
-			if( !strcmp(cmd->cmds[i], cp->cmds[i]))
+			if (!strcmp(cmd->cmds[i], cp->cmds[i]))
 				continue;
-			for(s2 = cp->cmds[i], s1 = argv[i+1];
-				*s1 == *s2 && *s1; s1++, s2++ ) ;
-			if( !*s1 )
+			for (s2 = cp->cmds[i], s1 = argv[i+1];
+				*s1 == *s2 && *s1; s1++, s2++) ;
+			if (!*s1)
 				match++;
 		}
-		if(match){
+		if (match) {
 			int j;
 			fprintf(stderr, "ERROR: in command '");
-			for( j = 0 ; j <= i ; j++ )
+			for (j = 0 ; j <= i ; j++)
 				fprintf(stderr, "%s%s",j?" ":"", argv[j+1]);
 			fprintf(stderr, "', '%s' is ambiguous\n",argv[j]);
 			return -2;
@@ -239,7 +239,8 @@ static int check_ambiguity(struct Command *cmd, char **argv){
  * This function, compacts the program name and the command in the first
  * element of the '*av' array
  */
-static int prepare_args(int *ac, char ***av, char *prgname, struct Command *cmd ){
+static int prepare_args(int *ac, char ***av, char *prgname,
+		struct Command *cmd) {
 
 	char	**ret;
 	int	i;
@@ -247,14 +248,14 @@ static int prepare_args(int *ac, char ***av, char *prgname, struct Command *cmd 
 
 	ret = (char **)malloc(sizeof(char*)*(*ac+1));
 	newname = (char*)malloc(strlen(prgname)+strlen(cmd->verb)+2);
-	if( !ret || !newname ){
+	if (!ret || !newname) {
 		free(ret);
 		free(newname);
 		return -1;
 	}
 
 	ret[0] = newname;
-	for(i=0; i < *ac ; i++ )
+	for (i=0; i < *ac ; i++)
 		ret[i+1] = (*av)[i];
 
 	strcpy(newname, prgname);
@@ -289,37 +290,37 @@ static int prepare_args(int *ac, char ***av, char *prgname, struct Command *cmd 
 */
 static int parse_args(int argc, char **argv,
 		      CommandFunction *func_,
-		      int *nargs_, char **cmd_, char ***args_ )
+		      int *nargs_, char **cmd_, char ***args_)
 {
 	struct Command	*cp;
 	struct Command	*matchcmd=0;
 	char		*prgname = get_prgname(argv[0]);
 	int		i=0, helprequested=0;
 
-	if( argc < 2 || !strcmp(argv[1], "help") ||
-		!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")){
+	if (argc < 2 || !strcmp(argv[1], "help") ||
+		!strcmp(argv[1], "-h") || !strcmp(argv[1], "--help")) {
 		help(prgname);
 		return 0;
 	}
 
-	for( cp = commands; cp->verb; cp++ )
-		if( !cp->ncmds)
+	for (cp = commands; cp->verb; cp++)
+		if (!cp->ncmds)
 			cp->ncmds = split_command(cp->verb, &(cp->cmds));
 
-	for( cp = commands; cp->verb; cp++ ){
+	for (cp = commands; cp->verb; cp++) {
 		int     match;
 
-		if( argc-1 < cp->ncmds )
+		if (argc-1 < cp->ncmds)
 			continue;
-		for( match = 1, i = 0 ; i < cp->ncmds ; i++ ){
+		for (match = 1, i = 0 ; i < cp->ncmds ; i++) {
 			char	*s1, *s2;
 			s1 = cp->cmds[i];
 			s2 = argv[i+1];
 
-			for(s2 = cp->cmds[i], s1 = argv[i+1];
+			for (s2 = cp->cmds[i], s1 = argv[i+1];
 				*s1 == *s2 && *s1;
-				s1++, s2++ ) ;
-			if( *s1 ){
+				s1++, s2++) ;
+			if (*s1) {
 				match=0;
 				break;
 			}
@@ -327,15 +328,15 @@ static int parse_args(int argc, char **argv,
 
 		/* If you understand why this code works ...
 			you are a genious !! */
-		if(argc>i+1 && !strcmp(argv[i+1],"--help")){
-			if(!helprequested)
+		if (argc>i+1 && !strcmp(argv[i+1],"--help")) {
+			if (!helprequested)
 				printf("Usage:\n");
 			print_help(prgname, cp, ADVANCED_HELP);
 			helprequested=1;
 			continue;
 		}
 
-		if(!match)
+		if (!match)
 			continue;
 
 		matchcmd = cp;
@@ -347,48 +348,47 @@ static int parse_args(int argc, char **argv,
 		break;
 	}
 
-	if(helprequested){
+	if (helprequested) {
 		printf("\n%s\n", MMC_VERSION);
 		return 0;
 	}
 
-	if(!matchcmd){
-		fprintf( stderr, "ERROR: unknown command '%s'\n",argv[1]);
+	if (!matchcmd) {
+		fprintf(stderr, "ERROR: unknown command '%s'\n",argv[1]);
 		help(prgname);
 		return -1;
 	}
 
-	if(check_ambiguity(matchcmd, argv))
+	if (check_ambiguity(matchcmd, argv))
 		return -2;
 
 	/* check the number of argument */
-	if (matchcmd->nargs < 0 && matchcmd->nargs < -*nargs_ ){
+	if (matchcmd->nargs < 0 && matchcmd->nargs < -*nargs_) {
 		fprintf(stderr, "ERROR: '%s' requires minimum %d arg(s)\n",
 			matchcmd->verb, -matchcmd->nargs);
 			return -2;
 	}
-	if(matchcmd->nargs >= 0 && matchcmd->nargs != *nargs_ && matchcmd->nargs != 999){
+	if (matchcmd->nargs >= 0 && matchcmd->nargs != *nargs_ && matchcmd->nargs != 999) {
 		fprintf(stderr, "ERROR: '%s' requires %d arg(s)\n",
 			matchcmd->verb, matchcmd->nargs);
 			return -2;
 	}
-	
-        if (prepare_args( nargs_, args_, prgname, matchcmd )){
-                fprintf(stderr, "ERROR: not enough memory\\n");
+	if (prepare_args(nargs_, args_, prgname, matchcmd)) {
+		fprintf(stderr, "ERROR: not enough memory\\n");
 		return -20;
-        }
+	}
 
 
 	return 1;
 }
-int main(int ac, char **av )
+int main(int ac, char **av)
 {
 	char		*cmd=0, **args=0;
 	int		nargs=0, r;
 	CommandFunction func=0;
 
 	r = parse_args(ac, av, &func, &nargs, &cmd, &args);
-	if( r <= 0 ){
+	if (r <= 0) {
 		/* error or no command to parse*/
 		exit(-r);
 	}

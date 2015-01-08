@@ -713,7 +713,7 @@ int do_read_extcsd(int nargs, char **argv)
 	int fd, ret;
 	char *device;
 	const char *str;
-        const char *ver_str[] = {
+	const char *ver_str[] = {
 		"4.0",	/* 0 */
 		"4.1",	/* 1 */
 		"4.2",	/* 2 */
