@@ -990,8 +990,14 @@ int do_read_extcsd(int nargs, char **argv)
 			ext_csd[197]);
 
 	/* DEVICE_TYPE in A45, CARD_TYPE in A441 */
+	printf("Card Type [CARD_TYPE: 0x%02x - %02x]\n",
+	       ext_csd[196], ext_csd[195]);
+	reg = ext_csd[195];
+	if (reg & 0x02) printf(" HS533 Dual Data Rate eMMC @266MHz 1.2VI/O\n");
+	if (reg & 0x01) printf(" HS533 Dual Data Rate eMMC @266MHz 1.8VI/O\n");
 	reg = ext_csd[196];
-	printf("Card Type [CARD_TYPE: 0x%02x]\n", reg);
+	if (reg & 0x80) printf(" HS400 Dual Data Rate eMMC @200MHz 1.2VI/O\n");
+	if (reg & 0x40) printf(" HS400 Dual Data Rate eMMC @200MHz 1.8VI/O\n");
 	if (reg & 0x20) printf(" HS200 Single Data Rate eMMC @200MHz 1.2VI/O\n");
 	if (reg & 0x10) printf(" HS200 Single Data Rate eMMC @200MHz 1.8VI/O\n");
 	if (reg & 0x08) printf(" HS Dual Data Rate eMMC @52MHz 1.2VI/O\n");
