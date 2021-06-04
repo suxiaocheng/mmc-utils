@@ -1917,6 +1917,41 @@ int do_sanitize(int nargs, char **argv)
 
 }
 
+int do_cmd6(int nargs, char **argv)
+{
+	int fd, ret;
+	char *device;
+	unsigned char index, value;
+
+	if (nargs != 4) {
+		fprintf(stderr, "Usage: mmc cmd6 </path/to/mmcblkX> index value \n");
+		exit(1);
+	}
+
+	device = argv[1];
+	index = atoi(argv[2]);
+	value = atoi(argv[3]);
+
+	fprintf(stderr, "Going to send cmd6, index: 0x%x, value: 0x%x\n", index, value);
+
+	fd = open(device, O_RDWR);
+	if (fd < 0) {
+		perror("open");
+		exit(1);
+	}
+
+	ret = write_extcsd_value(fd, index, value);
+	if (ret) {
+		fprintf(stderr, "Could not write 0x%02x to EXT_CSD[%d] in %s\n",
+			value, index, device);
+		exit(1);
+	}
+
+	close(fd);
+	return ret;
+
+}
+
 #define DO_IO(func, fd, buf, nbyte)					\
 	({												\
 		ssize_t ret = 0, r;							\

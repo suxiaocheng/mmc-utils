@@ -154,6 +154,11 @@ static struct Command commands[] = {
 		"Send Sanitize command to the <device>.\nThis will delete the unmapped memory region of the device.",
 	  NULL
 	},
+	{ do_cmd6, -1,
+	  "cmd6", "<device>\n"
+		"Send vendor cmd6 to the <device>.\n",
+	  NULL
+	},
 	{ do_rpmb_write_key, -1,
 	  "rpmb write-key", "<rpmb device> <key file>\n"
 		  "Program authentication key which is 32 bytes length and stored\n"
