@@ -41,3 +41,18 @@ Usage:
 # adb shell /data/mmc cmd6 /dev/block/mmcblk1 32 1
 Going to send cmd6, index: 0x20, value: 0x1
 ```
+
+* RPMB write key
+```
+rk3399_box:/ # /data/mmc rpmb write-key /dev/block/mmcblk1rpmb  -
+abcdefghijklmnopqrstuvwxyz123456
+rk3399_box:/ #
+```
+
+* RPMB read counter
+```
+rk3399_box:/ # /data/mmc rpmb read-counter /dev/block/mmcblk1rpmb
+Counter value: 0x00000000
+```
+
+
